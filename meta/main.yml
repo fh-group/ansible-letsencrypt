@@ -1,8 +1,8 @@
 ---
 galaxy_info:
-  author: Finn Herzfeld
+  author: Alexander Ambrose
   description: Generate TLS certificates and get them signed by Let's Encrypt.
-  issue_tracker_url: https://github.com/thefinn93/ansible-letsencrypt/issues
+  issue_tracker_url: https://github.com/fh-group/ansible-letsencrypt/issues
   license: GPL
   min_ansible_version: 2.0
 

@@ -1,51 +1,12 @@
 ---
-  - apt: update_cache=yes cache_valid_time=3600
-    become: yes
-    when: ansible_pkg_mgr == "apt"
-    tags: install
+  - name: add hub-binary for github remoting
+    apt_repository: repo='ppa:certbot/certbot'
 
-  - include_vars: "{{ item }}"
-    with_first_found:
-      - "../vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
-      - "../vars/{{ ansible_distribution }}.yml"
-      - "../vars/{{ ansible_os_family }}.yml"
-      - "../vars/default.yml"
-    when: virtualenv_package_name is not defined
-    tags: install
+  - name: update apt cache
+    apt: update_cache=yes cache_valid_time=3600
 
-  - name: Install depends
-    package: name={{ item }} state=present
-    become: yes
-    with_items: "{{ letsencrypt_depends | default([]) }}"
-    tags: install
-
-  - name: Install virtualenv
-    package: name={{ item }} state=present
-    become: yes
-    with_items: "{{ virtualenv_package_name | default([]) }}"
-    tags: install
-
-  - name: Install python depends
-    pip:
-      virtualenv: "{{ letsencrypt_venv }}"
-      virtualenv_site_packages: no
-      name: "{{ item }}"
-      state: latest
-      virtualenv_python: python2
-    become: yes
-    with_items:
-      - setuptools
-      - pip
-    tags: install
-
-  - name: More python depends
-    pip:
-      virtualenv: "{{ letsencrypt_venv }}"
-      virtualenv_site_packages: no
-      name: letsencrypt
-      state: latest
-    become: yes
-    tags: install
+  - name: install certbot
+    apt: name=certbot
 
   - name: Ensure webroot exists
     file:
@@ -67,6 +28,11 @@
     become: yes
     args:
       creates: "/etc/letsencrypt/live/{{ letsencrypt_cert_domains[0] }}"
+    
+  - name: Improve Diffie-Helmann parameters
+    command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+    args:
+      creates: /etc/ssl/certs/dhparam.pem
 
   - name: Fix the renewal file
     ini_file:
@@ -99,4 +65,9 @@
       day: "{{ letsencrypt_renewal_frequency.day }}"
       hour: "{{ letsencrypt_renewal_frequency.hour }}"
       minute: "{{ letsencrypt_renewal_frequency.minute }}"
-      job: "{{ letsencrypt_venv }}/bin/letsencrypt renew --quiet {{ letsencrypt_renewal_command_args }}"
+      job: "certbot renew --quiet {{ letsencrypt_renewal_command_args }}"
+
+  - name: Allow HTTPS connections
+    ufw: rule=allow port=443
+    become: yes
+    

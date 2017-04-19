@@ -47,3 +47,6 @@ The [Let's Encrypt client](https://github.com/letsencrypt/letsencrypt) will put 
         - example.net
        letsencrypt_renewal_command_args: '--renew-hook "systemctl restart nginx"'
 ```
+
+# Credits
+The project has been forked from Finn Herzfeld (thefinn93) and been modified. Original source and credit are his.
